@@ -1,0 +1,332 @@
+//============================================================
+// 文件: PLC_Logic.scl
+// 项目: PLC-Robot-Integration-Demo (PLC控制ABB机器人码垛)
+// 平台: TIA Portal V16+ / S7-1214C DC/DC/DC
+// 内容: 伺服控制FB / 主顺控FB / 故障处理FB / 急停处理
+// 版本: V2.0  日期: 2026-08-16
+// 变更: V1.0 基础正反转+限位保护
+//       V2.0 增加完整顺控、故障码、急停安全处理
+//============================================================
+//
+// ----------------- I/O 交叉引用表(调试用) -----------------
+// I0.0 启动SB1(常开)      I0.1 停止SB2(常闭)
+// I0.2 复位SB3            I0.3 手动/自动旋钮(自动=1)
+// I0.4 正限位SQ1          I0.5 反限位SQ2
+// I0.6 机器人"允许抓取"DO1 I0.7 物料检测光电E3Z
+// I1.0 急停回路反馈(常闭)  I1.1 安全门开关(常闭)
+// I1.2 机器人"码垛完成"DO2 I1.3 机器人故障DO3
+// I1.4 伺服报警ALM(断=报警) I1.5 伺服就绪RDY
+// Q0.0 脉冲PUL+  Q0.4 方向DIR+  Q0.3 伺服使能KA1
+// Q0.1 运行绿灯 Q0.2 报警红灯  Q0.5 蜂鸣器    Q0.6 待机黄灯
+// Q0.7 机器人DI1启动  Q1.0 机器人DI2复位
+// MW10 电流  MW12 电压  MW14 温度  MW16 计数  MW22 故障码
+// ----------------------------------------------------------
+//============================================================
+
+//============================================================
+// 块1: FB_ServoCtrl —— 伺服使能/点动/限位保护/报警锁存
+//============================================================
+FUNCTION_BLOCK "FB_ServoCtrl"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION: 1.0
+
+VAR_INPUT
+    bPowerOn    : BOOL;    // 使能命令(来自顺控或手动)
+    bReset      : BOOL;    // 报警复位
+    bJogFwd     : BOOL;    // 手动点动正转
+    bJogRev     : BOOL;    // 手动点动反转
+    bFwdLimit   : BOOL;    // 正向限位SQ1(1=压合)
+    bRevLimit   : BOOL;    // 反向限位SQ2(1=压合)
+    bServoReady : BOOL;    // 驱动器RDY(1=就绪)
+    bServoFault : BOOL;    // 驱动器ALM(1=报警, 现场常闭取反后送入)
+    bEStopOK    : BOOL;    // 急停回路(1=正常)
+END_VAR
+
+VAR_OUTPUT
+    qEnable     : BOOL;    // 伺服使能 -> KA1 -> CN1.DI1(SON)
+    qFwdAllow   : BOOL;    // 允许正转(软件许可)
+    qRevAllow   : BOOL;    // 允许反转(软件许可)
+    qRun        : BOOL;    // 运行中标志
+    qAlarm      : BOOL;    // 伺服报警锁存输出
+END_VAR
+
+VAR
+    bFaultLock  : BOOL;    // 故障锁存位
+    iDiag       : INT;     // 诊断码(供HMI显示)
+END_VAR
+
+BEGIN
+    //---- 1) 故障锁存: 报警或急停立即置位 ----
+    IF bServoFault OR NOT bEStopOK THEN
+        bFaultLock := TRUE;
+        iDiag := 16#0101;              // 伺服报警/急停类
+    END_IF;
+
+    //---- 2) 双限位同时压合 = 接线故障, 同样锁存 ----
+    IF bFwdLimit AND bRevLimit THEN
+        bFaultLock := TRUE;
+        iDiag := 16#0102;
+    END_IF;
+
+    //---- 3) 复位: 故障源消失后按复位才解锁 ----
+    IF bReset AND NOT bServoFault AND bEStopOK
+       AND NOT (bFwdLimit AND bRevLimit) THEN
+        bFaultLock := FALSE;
+        iDiag := 0;
+    END_IF;
+
+    //---- 4) 使能综合条件 ----
+    qEnable := bPowerOn AND bServoReady
+               AND NOT bFaultLock AND bEStopOK;
+
+    //---- 5) 方向许可: 使能OK+未压限位+双命令互斥 ----
+    qFwdAllow := qEnable AND NOT bFwdLimit
+                 AND bJogFwd AND NOT bJogRev;
+    qRevAllow := qEnable AND NOT bRevLimit
+                 AND bJogRev AND NOT bJogFwd;
+
+    qRun    := qFwdAllow OR qRevAllow;
+    qAlarm  := bFaultLock;
+
+END_FUNCTION_BLOCK
+
+
+//============================================================
+// 块2: FB_PalletMain —— 主顺控: 手动/自动/回原点/垛型计数
+//============================================================
+FUNCTION_BLOCK "FB_PalletMain"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION: 2.0
+
+VAR_INPUT
+    bStart      : BOOL;    // 启动按钮I0.0
+    bStop       : BOOL;    // 停止按钮I0.1(常闭,1=未按)
+    bReset      : BOOL;    // 复位按钮I0.2
+    bAutoSel    : BOOL;    // 自动模式I0.3(1=自动)
+    bPartSeen   : BOOL;    // 物料检测I0.7
+    bRobotAllow : BOOL;    // 机器人允许抓取DO1 -> I0.6
+    bRobotDone  : BOOL;    // 码垛完成DO2 -> I1.2
+    bRobotFault : BOOL;    // 机器人故障DO3 -> I1.3
+    bEStopOK    : BOOL;    // 急停回路I1.0
+    bDoorOK     : BOOL;    // 安全门I1.1
+END_VAR
+
+VAR_OUTPUT
+    qServoPower : BOOL;    // 伺服使能命令(送FB_ServoCtrl)
+    qRobotStart : BOOL;    // 机器人启动Q0.7->DI1
+    qRobotReset : BOOL;    // 机器人复位Q1.0->DI2
+    qLampRun    : BOOL;    // 运行绿灯
+    qLampWait   : BOOL;    // 待机黄灯
+    qLampFault  : BOOL;    // 故障红灯
+    qBuzzer     : BOOL;    // 蜂鸣器
+END_VAR
+
+VAR
+    iStep       : INT;     // 顺控步: 0待机 10回原点 20等料
+                            // 30送料 40等允许 50发启动
+                            // 60等完成 70垛满处理
+    bStartPulse : BOOL;    // 启动按钮上升沿
+    bStartMem   : BOOL;    // 启动边沿存储
+    bHomeDone   : BOOL;    // 原点完成标志
+    nParts      : INT;     // 本垛已码件数
+    nPallet     : INT;     // 换垛计数
+    tonFeed     : IEC_TIMER;  // 送料超时监视
+    tonHandShk  : IEC_TIMER;  // 握手超时监视
+    tonBuzz     : IEC_TIMER;  // 蜂鸣限时
+    bAnyFault   : BOOL;    // 综合故障
+END_VAR
+
+VAR CONSTANT
+    cFeedTimeout  : TIME := T#8S;    // 送料超时(含物料堵塞)
+    cHandTimeout  : TIME := T#30S;  // 机器人握手超时
+    cBuzzTime     : TIME := T#3S;   // 报警蜂鸣时长
+    cPartsPerBox  : INT  := 48;     // 满垛件数 3x4x4
+END_VAR
+
+BEGIN
+    //---- 1) 启动按钮上升沿 ----
+    bStartPulse := bStart AND NOT bStartMem;
+    bStartMem   := bStart;
+
+    //---- 2) 综合故障 = 急停/门/机器人/握手超时 ----
+    bAnyFault := NOT bEStopOK OR NOT bDoorOK
+                 OR bRobotFault OR tonHandShk.Q;
+
+    //---- 3) 蜂鸣器: 故障瞬间响, 3秒后自停 ----
+    tonBuzz(IN := bAnyFault, PT := cBuzzTime);
+    qBuzzer := bAnyFault AND NOT tonBuzz.Q;
+
+    //---- 4) 急停处理: 最高优先级, 立即撤使能与命令 ----
+    IF bAnyFault THEN
+        iStep       := 0;
+        qServoPower := FALSE;
+        qRobotStart := FALSE;
+        qLampRun    := FALSE;
+        qLampWait   := FALSE;
+        qLampFault  := TRUE;
+        IF bReset AND bEStopOK AND bDoorOK AND NOT bRobotFault THEN
+            nParts := 0;                 // 复位同时清计数(可选)
+        END_IF;
+        RETURN;                          // 故障期间跳过顺控
+    END_IF;
+
+    //---- 5) 模式判断: 手动模式只允许伺服点动, 不发启动 ----
+    IF NOT bAutoSel THEN
+        iStep       := 0;
+        qRobotStart := FALSE;
+        qLampWait   := TRUE;
+        qLampRun    := FALSE;
+        qServoPower := TRUE;             // 手动仍允许使能供点动
+        RETURN;
+    END_IF;
+
+    //---- 6) 自动顺控状态机 ----
+    IF NOT bStop THEN                    // 停止按钮(常闭断开)
+        iStep := 0;
+    END_IF;
+
+    CASE iStep OF
+
+        0:  // 待机: 等待启动, 且必须先有原点
+            qLampWait   := TRUE;
+            qLampRun    := FALSE;
+            qRobotStart := FALSE;
+            IF bStartPulse THEN
+                IF NOT bHomeDone THEN
+                    iStep := 10;         // 先回原点
+                ELSE
+                    iStep := 20;
+                END_IF;
+            END_IF;
+
+        10: // 回原点: 压SQ1后退回偏移量(此处由FB_Servo点动逻辑
+            // 配合HMI手动完成, 自动回零用PTO回原点功能, 略)
+            bHomeDone := TRUE;
+            iStep     := 20;
+
+        20: // 等料: 光电检测到物料进入送料步
+            qServoPower := TRUE;
+            qLampWait   := FALSE;
+            qLampRun    := TRUE;
+            IF bPartSeen THEN
+                iStep := 30;
+            END_IF;
+
+        30: // 送料: 脉冲输出由Motion Control工艺对象完成,
+            // 此处只做超时监视
+            tonFeed(IN := TRUE, PT := cFeedTimeout);
+            IF tonFeed.Q THEN
+                iStep := 0;              // 超时回待机, 由故障码提示
+            ELSIF NOT bPartSeen THEN     // 物料已离开检测位=送到位
+                tonFeed(IN := FALSE, PT := cFeedTimeout);
+                iStep := 40;
+            END_IF;
+
+        40: // 等机器人"允许抓取"
+            tonHandShk(IN := TRUE, PT := cHandTimeout);
+            IF bRobotAllow THEN
+                tonHandShk(IN := FALSE, PT := cHandTimeout);
+                iStep := 50;
+            END_IF;
+
+        50: // 发启动命令(脉冲式, 保持600ms)
+            qRobotStart := TRUE;
+            tonHandShk(IN := FALSE, PT := cHandTimeout);
+            IF NOT bRobotAllow THEN      // 机器人已接管
+                iStep := 60;
+            END_IF;
+
+        60: // 等码垛完成
+            tonHandShk(IN := TRUE, PT := cHandTimeout);
+            IF bRobotDone THEN
+                tonHandShk(IN := FALSE, PT := cHandTimeout);
+                qRobotStart := FALSE;
+                nParts := nParts + 1;
+                iStep   := 20;           // 下一件
+            END_IF;
+
+        70: // 垛满: 提示换托盘(由完成计数触发进入)
+            qLampWait := TRUE;
+            IF bStartPulse THEN          // 换盘后按启动继续
+                nParts  := 0;
+                nPallet := nPallet + 1;
+                iStep   := 20;
+            END_IF;
+
+    END_CASE;
+
+    IF nParts >= cPartsPerBox AND iStep = 20 THEN
+        iStep := 70;
+    END_IF;
+
+END_FUNCTION_BLOCK
+
+
+//============================================================
+// 块3: FB_FaultHandler —— 故障子程序: 优先级编码+首发故障锁存
+// 注: 用FB而非FC, 静态变量才能跨周期保持"首发故障码"
+//============================================================
+FUNCTION_BLOCK "FB_FaultHandler"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION: 1.0
+
+VAR_INPUT
+    bEStopOK    : BOOL;    // 1=正常
+    bDoorOK     : BOOL;    // 1=正常
+    bRobotFault : BOOL;    // 1=故障
+    bServoFault : BOOL;    // 1=故障
+    bFeedTO     : BOOL;    // 送料超时
+    bHandTO     : BOOL;    // 握手超时
+    bReset      : BOOL;    // 复位脉冲
+END_VAR
+
+VAR_OUTPUT
+    wFaultCode  : WORD;    // 故障码(0=无故障, 供HMI显示)
+    bFirstLock  : BOOL;    // 首发故障已锁存
+END_VAR
+
+VAR
+    wCurrent    : WORD;    // 本周期按优先级算出的故障码
+    wFirstCode  : WORD;    // 首发故障码(锁存)
+END_VAR
+
+BEGIN
+    // 优先级: 急停 > 安全门 > 伺服 > 机器人 > 送料超时 > 握手超时
+    IF NOT bEStopOK    THEN wCurrent := 16#0001;
+    ELSIF NOT bDoorOK  THEN wCurrent := 16#0002;
+    ELSIF bServoFault  THEN wCurrent := 16#0003;
+    ELSIF bRobotFault  THEN wCurrent := 16#0004;
+    ELSIF bFeedTO      THEN wCurrent := 16#0005;
+    ELSIF bHandTO      THEN wCurrent := 16#0006;
+    ELSE                    wCurrent := 16#0000;
+    END_IF;
+
+    // 首发故障锁存: 直到复位前保持不变, 便于现场定位
+    IF wCurrent <> 16#0000 AND NOT bFirstLock THEN
+        wFirstCode := wCurrent;
+        bFirstLock := TRUE;
+    END_IF;
+
+    IF bReset AND wCurrent = 16#0000 THEN
+        bFirstLock := FALSE;
+        wFirstCode := 16#0000;
+    END_IF;
+
+    // 输出: 有故障显示当前码, 无故障时保留首发码(历史)供查询
+    IF wCurrent <> 16#0000 THEN
+        wFaultCode := wCurrent;
+    ELSE
+        wFaultCode := wFirstCode;
+    END_IF;
+
+END_FUNCTION_BLOCK
+
+//============================================================
+// OB1 调用示例(供参考, 在OB1中按如下方式接线):
+//   CALL "FB_ServoCtrl", "FB_ServoCtrl_DB"
+//        (bPowerOn:="FB_PalletMain_DB".qServoPower, ...)
+//   CALL "FB_PalletMain", "FB_PalletMain_DB"
+//        (bStart:="I0.0", bStop:="I0.1", ...)
+//   CALL "FB_FaultHandler", "FB_FaultHandler_DB"
+//        (bEStopOK:="I0.0", ... wFaultCode=>"MW22")
+//============================================================

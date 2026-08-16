@@ -1,0 +1,115 @@
+//============================================================
+// 文件: star_delta.scl  (扩展示例: MCC-01 星三角启动柜)
+// 功能: 三相异步电机 星三角启动 + 过载保护 + 急停复位
+// 平台: 西门子 TIA Portal (S7-1200/1500, SCL)
+// 调用: 在 OB1 中调用本FB, 背景DB建议为 DB1
+// 版本: V1.1  日期: 2026-08-16
+// 变更: V1.0 初版
+//       V1.1 补齐脉冲/故障中间变量声明, 蜂鸣器改为响3秒自停
+//============================================================
+FUNCTION_BLOCK "FB_StarDelta"
+{ S7_Optimized_Access := 'TRUE' }
+VAR_INPUT
+    bStart      : BOOL;   // 启动按钮 SB1(常开, 接I0.0)
+    bStop       : BOOL;   // 停止按钮 SB2(常闭, 正常=TRUE, 接I0.1)
+    bEStopOK    : BOOL;   // 急停回路反馈(常闭, 正常=TRUE, 接I0.2)
+    bNoOverload : BOOL;   // 热继电器FR1辅助触点(常闭, 无过载=TRUE, 接I0.3)
+    bReset      : BOOL;   // 故障复位按钮 SB3(常开, 接I0.4)
+    bAutoOK     : BOOL;   // 工艺联锁允许(液位/水压等, 接I0.5)
+END_VAR
+VAR_OUTPUT
+    qKM_Main    : BOOL;   // 主接触器KM1线圈
+    qKM_Star    : BOOL;   // 星形接触器KM_Y线圈
+    qKM_Delta   : BOOL;   // 三角形接触器KM_D线圈
+    qRunLamp    : BOOL;   // 运行指示灯HL1(绿)
+    qStarLamp   : BOOL;   // 星形阶段指示灯HL2(黄)
+    qFaultLamp  : BOOL;   // 故障指示灯HL3(红)
+    qBuzzer     : BOOL;   // 报警蜂鸣器HA1
+END_VAR
+VAR
+    iStage      : INT;    // 阶段: 0=停止 1=星形 2=死区 3=三角
+    bFault      : BOOL;   // 综合故障(急停或过载)
+    bStartPulse : BOOL;   // 启动按钮上升沿
+    bResetPulse : BOOL;   // 复位按钮上升沿
+    bEStopFault : BOOL;   // 急停故障锁存
+    bOLFault    : BOOL;   // 过载故障锁存
+    bStartMem   : BOOL;   // 启动按钮边沿存储
+    bResetMem   : BOOL;   // 复位按钮边沿存储
+    StarTimer   : IEC_TIMER;  // 星形运行计时TON
+    DeadTimer   : IEC_TIMER;  // 换切死区计时TON
+    BuzzTimer   : IEC_TIMER;  // 蜂鸣限时计时TON
+END_VAR
+VAR CONSTANT
+    tStarTime : TIME := T#6S;    // 星形切换时间(按电机功率整定)
+    tDeadTime : TIME := T#200MS; // 换相死区, 防止KM_Y/KM_D电弧短路
+    tBuzzTime : TIME := T#3S;    // 故障蜂鸣时间
+END_VAR
+
+BEGIN
+    //---------- 0. 按钮信号取上升沿, 防止长按误触发 ----------
+    bStartPulse := bStart AND NOT bStartMem;
+    bStartMem   := bStart;
+    bResetPulse := bReset AND NOT bResetMem;
+    bResetMem   := bReset;
+
+    //---------- 1. 故障检测与锁存 ----------
+    // 急停回路断开(常闭触点断)或热继动作, 立即锁存对应故障
+    IF NOT bEStopOK THEN
+        bEStopFault := TRUE;
+    END_IF;
+
+    IF NOT bNoOverload THEN
+        bOLFault := TRUE;
+    END_IF;
+
+    bFault := bEStopFault OR bOLFault;
+
+    //---------- 2. 故障复位 ----------
+    // 必须同时满足: 急停已旋回(回路通) + 无过载 + 按下复位, 才能清除锁存
+    IF bResetPulse AND bEStopOK AND bNoOverload THEN
+        bEStopFault := FALSE;
+        bOLFault    := FALSE;
+    END_IF;
+
+    //---------- 3. 状态机: 启动/停止/切换 ----------
+    // 停机优先: 故障、停止按钮按下、工艺联锁丢失, 任意一个成立立即回0态
+    IF bFault OR NOT bStop OR NOT bAutoOK THEN
+        iStage := 0;
+    ELSIF bStartPulse AND (iStage = 0) THEN
+        iStage := 1;                       // 星形启动
+    END_IF;
+
+    // 星形计时到 -> 进死区(星断开、三角未合)
+    StarTimer(IN := (iStage = 1), PT := tStarTime);
+    IF (iStage = 1) AND StarTimer.Q THEN
+        iStage := 2;
+    END_IF;
+
+    // 死区计时到 -> 合三角, 进入全压运行
+    DeadTimer(IN := (iStage = 2), PT := tDeadTime);
+    IF (iStage = 2) AND DeadTimer.Q THEN
+        iStage := 3;
+    END_IF;
+
+    //---------- 4. 输出映射 ----------
+    qKM_Main  := (iStage > 0);             // 主接触器全程吸合
+    qKM_Star  := (iStage = 1);             // 仅星形阶段
+    qKM_Delta := (iStage = 3);             // 仅三角阶段(软件互锁)
+    // 注: KM_Y与KM_D还必须在柜内用辅助常闭触点做硬件互锁
+
+    //---------- 5. 指示灯与蜂鸣器 ----------
+    qRunLamp   := (iStage = 3);            // 三角全速运行亮绿灯
+    qStarLamp  := (iStage = 1);            // 星形降压阶段亮黄灯
+    qFaultLamp := bFault;                  // 故障亮红灯
+    BuzzTimer(IN := bFault, PT := tBuzzTime);
+    qBuzzer    := bFault AND NOT BuzzTimer.Q;  // 故障瞬间响, 3秒后自停
+
+END_FUNCTION_BLOCK
+
+//============================================================
+// OB1 中的调用示例(供参考, 不属于本文件):
+//   "FB_StarDelta_DB"(bStart:="I0.0", bStop:="I0.1",
+//       bEStopOK:="I0.2", bNoOverload:="I0.3",
+//       bReset:="I0.4", bAutoOK:="I0.5");
+//   // 输出直接引到 Q0.0~Q0.6, 见I/O分配表
+//============================================================
