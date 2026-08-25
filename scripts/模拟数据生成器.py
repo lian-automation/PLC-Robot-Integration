@@ -11,6 +11,7 @@
 
 import argparse
 import csv
+import os
 import random
 import time
 from datetime import datetime, timedelta
@@ -79,6 +80,10 @@ def main():
 
     random.seed()                      # 每次运行结果不同
     start_time = datetime.now()
+    # 自动创建输出目录(与 数据模拟器.py 行为一致)
+    out_dir = os.path.dirname(args.output)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     va = vb = vc = NOMINAL_VOLTAGE
     ia = ib = ic = 0.0
     temp = AMBIENT_TEMP
