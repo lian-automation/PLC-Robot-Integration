@@ -65,7 +65,7 @@ flowchart LR
 ```
 PLC-Robot-Integration-Demo/
 ├── README.md
-├── LICENSE                        # MIT(版权行请替换为你的名字)
+├── LICENSE                        # MIT License
 ├── src/                           # 主线: 码垛单元源程序
 │   ├── PLC_Logic.scl              # 伺服FB+顺控FB+故障FB (TIA外部源)
 │   ├── Robot_Program.mod          # RAPID: 标定/轨迹/安全逻辑
