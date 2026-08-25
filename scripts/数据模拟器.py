@@ -3,11 +3,12 @@
 数据模拟器.py —— PLC采集数据模拟 + 实时曲线 + 历史保存 + 报表导出
 
 功能:
-    1. 模拟PLC采集的三相电压/电流/温度数据(随机游走+启动冲击+停机窗口)
+    1. 模拟PLC采集的三相电压/电流/温度数据(随机游走+向额定回归+启动冲击+停机窗口)
     2. matplotlib 实时绘制曲线(--plot)
     3. 曲线保存为PNG(--save-fig, 不弹窗口, 可用于生成README配图)
     4. 历史数据滚动保存CSV
     5. 统计报表导出: 均值/峰值/报警次数/可用率(txt)
+       状态判定: 启动冲击段(前5点)豁免过流判定, 属正常工艺
 
 用法:
     python scripts/数据模拟器.py --samples 600 --plot
@@ -97,17 +98,27 @@ class PLCDataSimulator:
         if self.idx < 5:  # 启动冲击段
             return clamp(cfg.nominal_current * cfg.startup_surge
                          * random.uniform(0.85, 1.1), 0.0, 80.0)
-        return clamp(prev + random.gauss(0, 0.4), 2.0, 40.0)
+        if self.idx == 5:  # 冲击结束, 直接回落到额定负荷电流附近
+            return clamp(cfg.nominal_current * random.uniform(0.9, 1.1),
+                         2.0, 40.0)
+        # 随机游走+向额定值回归, 避免无界漂移后长期贴上限误报故障
+        pull = (cfg.nominal_current - prev) * 0.08
+        return clamp(prev + pull + random.gauss(0, 0.4), 2.0, 40.0)
 
     def _next_temp(self, prev, current):
-        target = self.cfg.ambient_temp + current * 2.2
+        # 热增益1.8: 额定负荷平衡温度约64℃, 相对75℃预警限留足裕量
+        target = self.cfg.ambient_temp + current * 1.8
         return clamp(prev + (target - prev) * 0.05 + random.gauss(0, 0.2),
                      self.cfg.ambient_temp - 2.0, 95.0)
 
-    def _judge(self):
+    def _judge(self, startup=False):
+        """状态判定: 启动冲击属正常工艺, 该段不做过流/过载判定"""
         cfg = self.cfg
-        if min(self.va, self.vb, self.vc) < cfg.volt_warn * 0.95 \
-           or max(self.ia, self.ib, self.ic) > cfg.curr_warn * 1.5:
+        if min(self.va, self.vb, self.vc) < cfg.volt_warn * 0.95:
+            return "故障"
+        if startup:
+            return "正常"
+        if max(self.ia, self.ib, self.ic) > cfg.curr_warn * 1.5:
             return "故障"
         if max(self.ia, self.ib, self.ic) > cfg.curr_warn \
            or self.temp > cfg.temp_warn:
@@ -116,6 +127,7 @@ class PLCDataSimulator:
 
     def step(self, clock: datetime) -> Sample:
         running = self._running()
+        startup = self.idx < 5           # 启动冲击段(判定豁免用)
         self.va = self._next_voltage(self.va)
         self.vb = self._next_voltage(self.vb)
         self.vc = self._next_voltage(self.vc)
@@ -125,9 +137,11 @@ class PLCDataSimulator:
         avg_i = statistics.mean((self.ia, self.ib, self.ic)) if running else 0.0
         self.temp = self._next_temp(self.temp, avg_i)
         ts = clock.strftime("%Y-%m-%d %H:%M:%S")
+        sample = Sample(ts, (self.va, self.vb, self.vc),
+                        (self.ia, self.ib, self.ic), self.temp,
+                        self._judge(startup))
         self.idx += 1
-        return Sample(ts, (self.va, self.vb, self.vc),
-                      (self.ia, self.ib, self.ic), self.temp, self._judge())
+        return sample
 
 
 class HistoryLogger:

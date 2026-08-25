@@ -35,25 +35,33 @@ def next_voltage(prev):
 
 
 def next_current(prev, sample_idx, running):
-    """电流: 停机=0, 启动前5个采样点为冲击电流, 之后回落到额定附近"""
+    """电流: 停机=0, 前5点启动冲击后回落到额定附近并小幅波动"""
     if not running:
         return 0.0
     if sample_idx < 5:
         return clamp(NOMINAL_CURRENT * STARTUP_SURGE * random.uniform(0.85, 1.1),
                      0.0, 80.0)
-    return clamp(prev + random.gauss(0, 0.4), 2.0, 40.0)
+    if sample_idx == 5:     # 冲击结束, 直接回落到额定负荷电流附近
+        return clamp(NOMINAL_CURRENT * random.uniform(0.9, 1.1), 2.0, 40.0)
+    # 随机游走+向额定值回归, 避免无界漂移后长期贴上限误报故障
+    pull = (NOMINAL_CURRENT - prev) * 0.08
+    return clamp(prev + pull + random.gauss(0, 0.4), 2.0, 40.0)
 
 
 def next_temp(prev, current):
-    """温度: 随电流负荷缓慢爬升, 与环境温度有回差"""
-    target = AMBIENT_TEMP + current * 2.2
+    """温度: 随电流负荷缓慢爬升; 热增益1.8使额定平衡约64℃, 留足裕量"""
+    target = AMBIENT_TEMP + current * 1.8
     return clamp(prev + (target - prev) * 0.05 + random.gauss(0, 0.2),
                  AMBIENT_TEMP - 2.0, 95.0)
 
 
-def judge_status(voltages, currents, temp):
-    """根据限值给出综合状态字"""
-    if min(voltages) < VOLT_WARN * 0.95 or max(currents) > CURR_WARN * 1.5:
+def judge_status(voltages, currents, temp, startup=False):
+    """根据限值给出综合状态字; 启动冲击属正常工艺, 该段不判过流"""
+    if min(voltages) < VOLT_WARN * 0.95:
+        return "故障"
+    if startup:
+        return "正常"
+    if max(currents) > CURR_WARN * 1.5:
         return "故障"
     if max(currents) > CURR_WARN or temp > MAX_TEMP:
         return "预警"
@@ -65,7 +73,8 @@ def main():
     parser.add_argument("-n", "--samples", type=int, default=600, help="采样点数")
     parser.add_argument("-i", "--interval", type=float, default=1.0, help="采样间隔(秒)")
     parser.add_argument("-o", "--output", type=str, default="plc_data.csv", help="输出CSV文件名")
-    parser.add_argument("--offline", action="store_true", help="模拟中途停机30~40分钟")
+    parser.add_argument("--offline", action="store_true",
+                        help="在40%~60%进度处模拟停机30个采样点")
     args = parser.parse_args()
 
     random.seed()                      # 每次运行结果不同
@@ -89,7 +98,8 @@ def main():
             ib = next_current(ib, idx, running)
             ic = next_current(ic, idx, running)
             temp = next_temp(temp, (ia + ib + ic) / 3 if running else 0.0)
-            status = judge_status((va, vb, vc), (ia, ib, ic), temp)
+            status = judge_status((va, vb, vc), (ia, ib, ic), temp,
+                                  startup=(idx < 5))
             writer.writerow([ts, f"{va:.1f}", f"{vb:.1f}", f"{vc:.1f}",
                              f"{ia:.1f}", f"{ib:.1f}", f"{ic:.1f}",
                              f"{temp:.1f}", status])
