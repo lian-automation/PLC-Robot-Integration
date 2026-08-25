@@ -366,5 +366,8 @@ END_FUNCTION_BLOCK
 //   CALL "FB_PalletMain", "FB_PalletMain_DB"
 //        (bStart:="I0.0", bStop:="I0.1", ...)
 //   CALL "FB_FaultHandler", "FB_FaultHandler_DB"
-//        (bEStopOK:="I0.0", ... wFaultCode=>"MW22")
+//        (bEStopOK:="I1.0",                       // 急停反馈
+//         bFeedTO:="FB_PalletMain_DB".bFeedTO,
+//         bHandTO:="FB_PalletMain_DB".bHandTO,
+//         ... wFaultCode=>"MW22")
 //============================================================
