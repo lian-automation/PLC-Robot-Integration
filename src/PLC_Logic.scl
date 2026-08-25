@@ -267,10 +267,10 @@ BEGIN
                 iStep := 60;
             END_IF;
 
-        60: // 等码垛完成
+        60: // 等码垛完成(启动命令已在脉宽到点时撤除, 此处兜底清零)
+            qRobotStart := FALSE;
             tonHandShk(IN := TRUE, PT := cHandTimeout);
             IF bRobotDone THEN
-                qRobotStart := FALSE;
                 nParts := nParts + 1;
                 iStep  := 20;            // 下一件
             ELSIF tonHandShk.Q THEN
