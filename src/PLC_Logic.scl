@@ -3,9 +3,12 @@
 // 项目: PLC-Robot-Integration-Demo (PLC控制ABB机器人码垛)
 // 平台: TIA Portal V16+ / S7-1214C DC/DC/DC
 // 内容: 伺服控制FB / 主顺控FB / 故障处理FB / 急停处理
-// 版本: V2.0  日期: 2026-08-16
+// 版本: V2.1  日期: 2026-08-24
 // 变更: V1.0 基础正反转+限位保护
 //       V2.0 增加完整顺控、故障码、急停安全处理
+//       V2.1 超时改锁存+定时器卫生(修超时后无法复位/误超时)
+//            故障灯无故障时强制熄灭; 启动命令改600ms脉冲式;
+//            满垛输出qRobotReset(DI2)通知机器人清垛位计数
 //============================================================
 //
 // ----------------- I/O 交叉引用表(调试用) -----------------
@@ -133,6 +136,7 @@ VAR
     tonFeed     : IEC_TIMER;  // 送料超时监视
     tonHandShk  : IEC_TIMER;  // 握手超时监视
     tonBuzz     : IEC_TIMER;  // 蜂鸣限时
+    tonStart    : IEC_TIMER;  // 启动命令脉宽控制
     bFeedTO     : BOOL;    // 送料超时锁存(复位前保持)
     bHandTO     : BOOL;    // 握手超时锁存(复位前保持)
     bAnyFault   : BOOL;    // 综合故障
@@ -142,6 +146,7 @@ VAR CONSTANT
     cFeedTimeout  : TIME := T#8S;    // 送料超时(含物料堵塞)
     cHandTimeout  : TIME := T#30S;  // 机器人握手超时
     cBuzzTime     : TIME := T#3S;   // 报警蜂鸣时长
+    cCmdPulse     : TIME := T#600MS; // 跨设备命令脉宽(防信号粘连)
     cPartsPerBox  : INT  := 48;     // 满垛件数 3x4x4
 END_VAR
 
@@ -163,12 +168,13 @@ BEGIN
 
     //---- 4) 急停处理: 最高优先级, 立即撤使能与命令 ----
     IF bAnyFault THEN
-        iStep       := 0;
-        qServoPower := FALSE;
-        qRobotStart := FALSE;
-        qLampRun    := FALSE;
-        qLampWait   := FALSE;
-        qLampFault  := TRUE;
+        iStep        := 0;
+        qServoPower  := FALSE;
+        qRobotStart  := FALSE;
+        qRobotReset  := FALSE;
+        qLampRun     := FALSE;
+        qLampWait    := FALSE;
+        qLampFault   := TRUE;
         IF bReset AND bEStopOK AND bDoorOK AND NOT bRobotFault THEN
             // 复位: 故障源消失后清超时锁存(计数清零为可选)
             bFeedTO := FALSE;
@@ -182,11 +188,12 @@ BEGIN
 
     //---- 5) 模式判断: 手动模式只允许伺服点动, 不发启动 ----
     IF NOT bAutoSel THEN
-        iStep       := 0;
-        qRobotStart := FALSE;
-        qLampWait   := TRUE;
-        qLampRun    := FALSE;
-        qServoPower := TRUE;             // 手动仍允许使能供点动
+        iStep        := 0;
+        qRobotStart  := FALSE;
+        qRobotReset  := FALSE;
+        qLampWait    := TRUE;
+        qLampRun     := FALSE;
+        qServoPower  := TRUE;            // 手动仍允许使能供点动
         RETURN;
     END_IF;
 
@@ -202,6 +209,9 @@ BEGIN
     END_IF;
     IF NOT (iStep = 40 OR iStep = 60) THEN
         tonHandShk(IN := FALSE);
+    END_IF;
+    IF iStep <> 50 THEN
+        tonStart(IN := FALSE);
     END_IF;
 
     CASE iStep OF
@@ -250,10 +260,10 @@ BEGIN
                 iStep   := 0;
             END_IF;
 
-        50: // 发启动命令(脉冲式, 保持600ms)
+        50: // 发启动命令(600ms脉冲式, 防信号粘连致机器人重复执行)
             qRobotStart := TRUE;
-            tonHandShk(IN := FALSE, PT := cHandTimeout);
-            IF NOT bRobotAllow THEN      // 机器人已接管
+            tonStart(IN := TRUE, PT := cCmdPulse);
+            IF tonStart.Q THEN           // 脉宽到, 撤命令进等待步
                 iStep := 60;
             END_IF;
 
@@ -269,17 +279,22 @@ BEGIN
             END_IF;
 
         70: // 垛满: 提示换托盘(由完成计数触发进入)
-            qLampWait := TRUE;
+            qLampWait    := TRUE;
+            qLampRun     := FALSE;
+            qServoPower  := FALSE;       // 换盘期间断开伺服使能
+            // qRobotReset 保持输出, 机器人DI2上升沿清垛位计数
             IF bStartPulse THEN          // 换盘后按启动继续
-                nParts  := 0;
-                nPallet := nPallet + 1;
-                iStep   := 20;
+                nParts       := 0;
+                nPallet      := nPallet + 1;
+                qRobotReset  := FALSE;   // 撤复位命令
+                iStep        := 20;
             END_IF;
 
     END_CASE;
 
     IF nParts >= cPartsPerBox AND iStep = 20 THEN
-        iStep := 70;
+        iStep       := 70;
+        qRobotReset := TRUE;             // 满垛: 通知机器人准备新垛
     END_IF;
 
 END_FUNCTION_BLOCK
