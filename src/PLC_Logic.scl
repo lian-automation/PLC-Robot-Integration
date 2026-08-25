@@ -133,6 +133,8 @@ VAR
     tonFeed     : IEC_TIMER;  // 送料超时监视
     tonHandShk  : IEC_TIMER;  // 握手超时监视
     tonBuzz     : IEC_TIMER;  // 蜂鸣限时
+    bFeedTO     : BOOL;    // 送料超时锁存(复位前保持)
+    bHandTO     : BOOL;    // 握手超时锁存(复位前保持)
     bAnyFault   : BOOL;    // 综合故障
 END_VAR
 
@@ -148,9 +150,12 @@ BEGIN
     bStartPulse := bStart AND NOT bStartMem;
     bStartMem   := bStart;
 
-    //---- 2) 综合故障 = 急停/门/机器人/握手超时 ----
+    //---- 2) 综合故障 = 急停/门/机器人/超时锁存 ----
+    // 超时用锁存位而非定时器Q直接参与: 定时器到点即复位,
+    // 故障状态由锁存保持, 复位按钮清除, 避免"定时器残留导致
+    // 无法复位"或"二次进入即超时"两类卡死
     bAnyFault := NOT bEStopOK OR NOT bDoorOK
-                 OR bRobotFault OR tonHandShk.Q;
+                 OR bRobotFault OR bFeedTO OR bHandTO;
 
     //---- 3) 蜂鸣器: 故障瞬间响, 3秒后自停 ----
     tonBuzz(IN := bAnyFault, PT := cBuzzTime);
@@ -165,10 +170,15 @@ BEGIN
         qLampWait   := FALSE;
         qLampFault  := TRUE;
         IF bReset AND bEStopOK AND bDoorOK AND NOT bRobotFault THEN
-            nParts := 0;                 // 复位同时清计数(可选)
+            // 复位: 故障源消失后清超时锁存(计数清零为可选)
+            bFeedTO := FALSE;
+            bHandTO := FALSE;
+            nParts  := 0;
         END_IF;
         RETURN;                          // 故障期间跳过顺控
     END_IF;
+
+    qLampFault := FALSE;                 // 无故障时确保红灯熄灭
 
     //---- 5) 模式判断: 手动模式只允许伺服点动, 不发启动 ----
     IF NOT bAutoSel THEN
@@ -183,6 +193,15 @@ BEGIN
     //---- 6) 自动顺控状态机 ----
     IF NOT bStop THEN                    // 停止按钮(常闭断开)
         iStep := 0;
+    END_IF;
+
+    //---- 定时器卫生: 不属于对应步时强制复位 ----
+    // 防止故障/停机打断后残留计时, 再次进入该步立即误超时
+    IF iStep <> 30 THEN
+        tonFeed(IN := FALSE);
+    END_IF;
+    IF NOT (iStep = 40 OR iStep = 60) THEN
+        tonHandShk(IN := FALSE);
     END_IF;
 
     CASE iStep OF
@@ -216,17 +235,19 @@ BEGIN
             // 此处只做超时监视
             tonFeed(IN := TRUE, PT := cFeedTimeout);
             IF tonFeed.Q THEN
-                iStep := 0;              // 超时回待机, 由故障码提示
+                bFeedTO := TRUE;         // 锁存送料超时, 进故障处理
+                iStep   := 0;
             ELSIF NOT bPartSeen THEN     // 物料已离开检测位=送到位
-                tonFeed(IN := FALSE, PT := cFeedTimeout);
                 iStep := 40;
             END_IF;
 
         40: // 等机器人"允许抓取"
             tonHandShk(IN := TRUE, PT := cHandTimeout);
             IF bRobotAllow THEN
-                tonHandShk(IN := FALSE, PT := cHandTimeout);
                 iStep := 50;
+            ELSIF tonHandShk.Q THEN
+                bHandTO := TRUE;         // 锁存握手超时, 进故障处理
+                iStep   := 0;
             END_IF;
 
         50: // 发启动命令(脉冲式, 保持600ms)
@@ -239,10 +260,12 @@ BEGIN
         60: // 等码垛完成
             tonHandShk(IN := TRUE, PT := cHandTimeout);
             IF bRobotDone THEN
-                tonHandShk(IN := FALSE, PT := cHandTimeout);
                 qRobotStart := FALSE;
                 nParts := nParts + 1;
-                iStep   := 20;           // 下一件
+                iStep  := 20;            // 下一件
+            ELSIF tonHandShk.Q THEN
+                bHandTO := TRUE;         // 锁存完成超时, 进故障处理
+                iStep   := 0;
             END_IF;
 
         70: // 垛满: 提示换托盘(由完成计数触发进入)
