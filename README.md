@@ -7,10 +7,10 @@
 
 > **项目定位（请先读）**：这是我的**个人学习/求职作品集项目**，用于把课堂上学到的 PLC、伺服、工业机器人知识串成一个完整工程。项目在 **TIA PLCSIM + RobotStudio 虚拟环境**中完成联调，仓库内所有"调试数据/性能指标"均为**仿真验证值**，不涉及真实产线交付。硬件清单是选型方案，仓库不含实物。
 
-西门子 PLC 控制 ABB 机器人码垛的仿真工程：PLC 负责产线逻辑（伺服送料、限位保护、模式管理、故障处理），ABB 机器人执行抓取-放置码垛，MCGS 触摸屏做人机界面，Python 上位机完成数据采集与曲线监控。按真实工程交付物组织：程序、设计文档、接线/选型说明、故障库、调试日志、操作手册齐全。
+西门子 PLC 控制 ABB 机器人码垛的仿真工程：PLC 负责产线逻辑（伺服送料、限位保护、模式管理、故障处理），ABB 机器人执行抓取-放置码垛，MCGS 触摸屏做人机界面，Python 上位机脚本完成采集数据仿真、曲线监控与报表统计（OPC UA 采集客户端为选型设计，尚未实现，见第 2 节技术选型）。按真实工程交付物组织：程序、设计文档、接线/选型说明、故障库、调试日志、操作手册齐全。
 
 ![监控曲线示例](docs/images/监控曲线示例.png)
-*上图为 `scripts/数据模拟器.py --save-fig` 真实运行输出：三相电压 / 电流 / 绕组温度（数据为仿真值）。*
+*上图为 `scripts/数据模拟器.py` 在故障注入场景（`--fault volt_sag,overcurrent,overtemp`）下的真实运行输出：三相电压 / 电流 / 绕组温度（数据为仿真值）。不带 `--fault` 运行即纯正常工况。*
 
 ## 1. 系统架构
 
@@ -19,7 +19,7 @@ flowchart LR
     A[西门子 S7-1214C<br/>SCL 顺控+伺服控制] -- Profinet/IO握手 --> B[ABB IRC5 控制器<br/>RAPID 码垛程序]
     B -- 末端工具 --> C[(码垛工位<br/>3×4×4 立体垛型)]
     A -- 以太网 S7comm --> D[MCGS 触摸屏<br/>监控/参数/报警]
-    A -- OPC UA --> E[Python 上位机<br/>曲线/历史/报表]
+    A -. OPC UA(选型设计,未实现) .-> E[Python 上位机<br/>曲线/历史/报表<br/>仓库内现为数据模拟器]
     F[台达B2伺服+输送线] --> A
 ```
 
@@ -33,7 +33,7 @@ flowchart LR
 | 伺服 | 台达 ASDA-B2 750W | 性价比高，脉冲+方向控制简单，调参软件免费，备件易购 |
 | 机器人 | ABB IRB1200 + IRC5 | RAPID 语言结构化好（模块/例程/中断），RobotStudio 可离线仿真，教材资料多 |
 | 触摸屏 | MCGS TPC7062Ti | 组态门槛低、价格低，支持 S7-1200 以太网驱动 |
-| 上位机 | Python + snap7/opcua + matplotlib | 免费开源，数据处理与可视化生态强，便于扩展云监控 |
+| 上位机 | Python + matplotlib（snap7/opcua 采集客户端为选型设计，仓库内现为数据模拟器） | 免费开源，数据处理与可视化生态强，便于扩展云监控 |
 
 ## 3. 系统性能指标（仿真验证值）
 
@@ -44,7 +44,7 @@ flowchart LR
 | 机器人 TCP 重复定位 | ±0.05 mm | 出厂参数（未实测） |
 | 通讯周期（PLC↔屏） | ≤ 200 ms | ~100 ms |
 | 连续运行考核 | 48 h（仿真加速） | 故障停机 0 |
-| 启动成功率 | ≥ 99% | 考核期 37 次启动 0 失败 |
+| 启动成功率 | ≥ 99% | 100%（48h 仿真考核 0 失败，过程记录见 `logs/完整调试记录.md` D25~D30） |
 
 ## 4. 项目硬件清单（选型方案）
 
@@ -66,6 +66,7 @@ flowchart LR
 PLC-Robot-Integration-Demo/
 ├── README.md
 ├── LICENSE                        # MIT License
+├── requirements.txt               # Python依赖(仅matplotlib, 其余为标准库)
 ├── src/                           # 主线: 码垛单元源程序
 │   ├── PLC_Logic.scl              # 伺服FB+顺控FB+故障FB (TIA外部源)
 │   ├── Robot_Program.mod          # RAPID: 标定/轨迹/安全逻辑
@@ -77,15 +78,16 @@ PLC-Robot-Integration-Demo/
 │   ├── 程序流程图.md               # 初始化→手动→自动→故障
 │   ├── 仿真测试用例.md             # 24组互锁真值表+故障注入用例
 │   ├── 调试笔记.md                 # 10条避坑
-│   ├── 数据示例.csv                # 模拟器真实运行输出
-│   ├── 报表示例.txt                # 模拟器真实运行输出
-│   └── images/监控曲线示例.png     # 模拟器真实运行输出
+│   ├── 数据示例.csv                # 模拟器真实运行输出(故障注入场景)
+│   ├── 报表示例.txt                # 模拟器真实运行输出(故障注入场景)
+│   └── images/监控曲线示例.png     # 模拟器真实运行输出(故障注入场景)
 ├── fault_cases/                   # 故障库
 │   ├── 故障大全.md                 # 50条 现象-原因-处理-预防
 │   └── 故障排查手册.md             # 30条 现象-原因-处理
 ├── scripts/                       # Python上位机脚本
-│   ├── 数据模拟器.py               # 完整版: 曲线+历史CSV+报表
-│   └── 模拟数据生成器.py           # 轻量版: 纯标准库, 仅CSV
+│   ├── 数据模拟器.py               # 完整版: 曲线+历史CSV+报表+故障注入
+│   ├── 模拟数据生成器.py           # 轻量版: 纯标准库, 仅CSV
+│   └── 真值表复算.py               # 复算仿真测试用例表1/表2与SCL逻辑是否一致
 ├── manual/操作说明书.md            # 按真实产线规范编写的操作手册
 ├── logs/完整调试记录.md            # 30天分阶段虚拟调试记录
 ├── resume/                        # 求职素材(自述与简历描述)
@@ -100,14 +102,15 @@ PLC-Robot-Integration-Demo/
 
 > 说明：`star_delta_demo` 下 `.dwg`/`.xlsx` 为纯文本模拟占位文件；接线图图号（E-XD-01/02）在 `docs/硬件接线图说明.md` 中以文字版给出。
 
-## 6. 快速开始（全部可离线复现）
+## 6. 快速开始
 
 1. **PLC**：TIA Portal →“外部源文件”导入 `src/PLC_Logic.scl` → 右键“从源生成块”→ 编译下载（PLCSIM 即可）。
 2. **机器人**：RobotStudio 加载 `src/Robot_Program.mod`，先 v100 低速空跑验证路径。
-3. **上位机**：`pip install matplotlib` 后运行
-   `python scripts/数据模拟器.py --samples 600 --plot --report`
-   `docs/` 下的曲线图、CSV、报表就是这条命令的运行产物（`--save-fig` 可重新生成）。
-4. **测试用例**：对照 `docs/仿真测试用例.md` 在 PLCSIM 中逐条注入验证。
+3. **上位机**：`pip install -r requirements.txt`（实际仅需 matplotlib；未安装时脚本自动降级为仅生成 CSV）后运行
+   `python scripts/数据模拟器.py --samples 600 --fault volt_sag,overcurrent,overtemp --save-fig docs/images/监控曲线示例.png --report --output docs/数据示例.csv`
+   `docs/` 下的曲线图、CSV、报表就是这条命令（故障注入场景）的运行产物；不带 `--fault` 运行即纯正常工况（报表故障/预警为 0）。
+4. **测试用例**：对照 `docs/仿真测试用例.md` 在 PLCSIM 中逐条注入验证；表1/表2 期望值可先用
+   `python scripts/真值表复算.py` 自动复核（与 `src/PLC_Logic.scl` 逻辑逐行对照，不一致时非零退出）。
 
 ## 7. 常见问题（面试官/HR 可能会问）
 
