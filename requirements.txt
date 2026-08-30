@@ -1,0 +1,5 @@
+# Python 依赖（上位机脚本）
+# - scripts/数据模拟器.py: 仅 --plot/--save-fig 需要 matplotlib,
+#   未安装时自动降级为仅生成 CSV(标准库)
+# - scripts/模拟数据生成器.py、scripts/真值表复算.py: 纯标准库, 无第三方依赖
+matplotlib>=3.0
