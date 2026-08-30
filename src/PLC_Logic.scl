@@ -3,12 +3,17 @@
 // 项目: PLC-Robot-Integration-Demo (PLC控制ABB机器人码垛)
 // 平台: TIA Portal V16+ / S7-1214C DC/DC/DC
 // 内容: 伺服控制FB / 主顺控FB / 故障处理FB / 急停处理
-// 版本: V2.1  日期: 2026-08-24
+// 版本: V2.2  日期: 2026-08-30
 // 变更: V1.0 基础正反转+限位保护
 //       V2.0 增加完整顺控、故障码、急停安全处理
 //       V2.1 超时改锁存+定时器卫生(修超时后无法复位/误超时)
 //            故障灯无故障时强制熄灭; 启动命令改600ms脉冲式;
 //            满垛输出qRobotReset(DI2)通知机器人清垛位计数
+//       V2.2 定时器实例声明由IEC_TIMER改为TON多重实例(IEC_TIMER是
+//            定时器背景SDT, 不能按FB方式直接调用, "从源生成块"编译报错);
+//            故障复位不再清nParts——机器人侧nCount(PERS)仅在满垛DI2时
+//            清零, 两侧计数必须同步保持, 否则中垛复位后垛位错位且
+//            PLC等满垛/机器人等DI2互等死锁
 //============================================================
 //
 // ----------------- I/O 交叉引用表(调试用) -----------------
@@ -133,10 +138,10 @@ VAR
     bHomeDone   : BOOL;    // 原点完成标志
     nParts      : INT;     // 本垛已码件数
     nPallet     : INT;     // 换垛计数
-    tonFeed     : IEC_TIMER;  // 送料超时监视
-    tonHandShk  : IEC_TIMER;  // 握手超时监视
-    tonBuzz     : IEC_TIMER;  // 蜂鸣限时
-    tonStart    : IEC_TIMER;  // 启动命令脉宽控制
+    tonFeed     : TON;     // 送料超时监视(多重实例)
+    tonHandShk  : TON;     // 握手超时监视(多重实例)
+    tonBuzz     : TON;     // 蜂鸣限时(多重实例)
+    tonStart    : TON;     // 启动命令脉宽控制(多重实例)
     bFeedTO     : BOOL;    // 送料超时锁存(复位前保持)
     bHandTO     : BOOL;    // 握手超时锁存(复位前保持)
     bAnyFault   : BOOL;    // 综合故障
@@ -176,10 +181,14 @@ BEGIN
         qLampWait    := FALSE;
         qLampFault   := TRUE;
         IF bReset AND bEStopOK AND bDoorOK AND NOT bRobotFault THEN
-            // 复位: 故障源消失后清超时锁存(计数清零为可选)
+            // 复位: 故障源消失后清超时锁存。
+            // 注意nParts不清零: 机器人nCount(PERS)仅在满垛经DI2清零,
+            // 故障复位若单侧清零, 两侧对"第几件"失去共识——垛位换算
+            // 错位, 且PLC永不满垛/机器人空等DI2, 互等30s超时死锁。
+            // 两侧计数只能同步清零: 满垛换盘时PLC输出DI2, 机器人
+            // 上升沿清nCount, PLC在步70按启动时清nParts。
             bFeedTO := FALSE;
             bHandTO := FALSE;
-            nParts  := 0;
         END_IF;
         RETURN;                          // 故障期间跳过顺控
     END_IF;

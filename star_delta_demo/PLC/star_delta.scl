@@ -3,9 +3,11 @@
 // 功能: 三相异步电机 星三角启动 + 过载保护 + 急停复位
 // 平台: 西门子 TIA Portal (S7-1200/1500, SCL)
 // 调用: 在 OB1 中调用本FB, 背景DB建议为 DB1
-// 版本: V1.1  日期: 2026-08-16
+// 版本: V1.2  日期: 2026-08-30
 // 变更: V1.0 初版
 //       V1.1 补齐脉冲/故障中间变量声明, 蜂鸣器改为响3秒自停
+//       V1.2 定时器实例声明由IEC_TIMER改为TON多重实例(IEC_TIMER是
+//            定时器背景SDT, 不能按FB方式直接调用, 编译报错)
 //============================================================
 FUNCTION_BLOCK "FB_StarDelta"
 { S7_Optimized_Access := 'TRUE' }
@@ -35,9 +37,9 @@ VAR
     bOLFault    : BOOL;   // 过载故障锁存
     bStartMem   : BOOL;   // 启动按钮边沿存储
     bResetMem   : BOOL;   // 复位按钮边沿存储
-    StarTimer   : IEC_TIMER;  // 星形运行计时TON
-    DeadTimer   : IEC_TIMER;  // 换切死区计时TON
-    BuzzTimer   : IEC_TIMER;  // 蜂鸣限时计时TON
+    StarTimer   : TON;    // 星形运行计时TON(多重实例)
+    DeadTimer   : TON;    // 换切死区计时TON(多重实例)
+    BuzzTimer   : TON;    // 蜂鸣限时计时TON(多重实例)
 END_VAR
 VAR CONSTANT
     tStarTime : TIME := T#6S;    // 星形切换时间(按电机功率整定)
