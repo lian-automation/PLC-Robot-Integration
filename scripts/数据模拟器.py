@@ -9,10 +9,16 @@
     4. 历史数据滚动保存CSV
     5. 统计报表导出: 均值/峰值/报警次数/可用率(txt)
        状态判定: 启动冲击段(前5点)豁免过流判定, 属正常工艺
+    6. 故障注入(--fault): 向指定进度窗口注入扰动, 使"预警/故障"判定
+       分支真实可达(用于演示报警统计与联调用例):
+         volt_sag     电压跌落(向348V回归, 越过故障阈值353.4V)
+         overcurrent  过载(负荷抬升至约38A, 爬升段穿预警带, 平台段越故障限36A)
+         overtemp     温升(平衡温度叠加16℃, 越过75℃预警限)
 
 用法:
     python scripts/数据模拟器.py --samples 600 --plot
-    python scripts/数据模拟器.py --samples 420 --save-fig docs/images/监控曲线示例.png --report
+    python scripts/数据模拟器.py --samples 600 --fault volt_sag,overcurrent,overtemp \
+        --save-fig docs/images/监控曲线示例.png --report --output docs/数据示例.csv
     python scripts/数据模拟器.py --samples 600 --interval 1 -o data/plc_log.csv
 
 依赖: 仅标准库即可生成CSV; --plot/--save-fig 需要 matplotlib (pip install matplotlib)
@@ -35,6 +41,14 @@ except ImportError:
 
 CSV_HEADER = ["时间戳", "Uab(V)", "Ubc(V)", "Uca(V)",
               "Ia(A)", "Ib(A)", "Ic(A)", "温度(℃)", "状态"]
+
+# 故障注入场景: 场景名 -> (起始相对进度, 结束相对进度)
+# 窗口互相错开且避开停机窗口(0.4~0.55), 便于在曲线上区分观察
+FAULT_SCENARIOS = {
+    "volt_sag":     (0.15, 0.30),
+    "overcurrent":  (0.55, 0.75),
+    "overtemp":     (0.80, 0.92),
+}
 
 
 def clamp(value, low, high):
@@ -74,13 +88,21 @@ class Sample:
 class PLCDataSimulator:
     """状态化数据源: 电压/电流/温度随机游走 + 启动冲击 + 停机窗口"""
 
-    def __init__(self, cfg: SimConfig, total: int):
+    def __init__(self, cfg: SimConfig, total: int, faults=None):
         self.cfg = cfg
         self.total = max(1, total)
+        self.faults = set(faults or ())
         self.va = self.vb = self.vc = cfg.nominal_voltage
         self.ia = self.ib = self.ic = 0.0
         self.temp = cfg.ambient_temp
         self.idx = 0
+
+    def _in_fault_window(self, name) -> bool:
+        """当前采样点是否落在指定故障注入场景的进度窗口内"""
+        if name not in self.faults:
+            return False
+        lo, hi = FAULT_SCENARIOS[name]
+        return lo <= self.idx / self.total < hi
 
     def _running(self) -> bool:
         """按相对进度判断当前是否处于停机窗口"""
@@ -89,12 +111,21 @@ class PLCDataSimulator:
         return not (lo <= frac <= hi)
 
     def _next_voltage(self, prev):
+        if self._in_fault_window("volt_sag"):
+            # 注入电压跌落: 向348V回归(低于故障阈值353.4V), 使故障分支可达
+            return clamp(prev + (348.0 - prev) * 0.3 + random.gauss(0, 0.8),
+                         340.0, 400.0)
         return clamp(prev + random.gauss(0, 0.8), 360.0, 400.0)
 
     def _next_current(self, prev, running):
         cfg = self.cfg
         if not running:
             return 0.0
+        if self._in_fault_window("overcurrent"):
+            # 注入过载: 负荷抬升至约38A——爬升段穿越24A预警带,
+            # 平台段越过36A故障限, 预警/故障分支均真实可达
+            pull = (cfg.nominal_current * 1.9 - prev) * 0.15
+            return clamp(prev + pull + random.gauss(0, 0.4), 2.0, 40.0)
         if self.idx < 5:  # 启动冲击段
             return clamp(cfg.nominal_current * cfg.startup_surge
                          * random.uniform(0.85, 1.1), 0.0, 80.0)
@@ -108,6 +139,9 @@ class PLCDataSimulator:
     def _next_temp(self, prev, current):
         # 热增益1.8: 额定负荷平衡温度约64℃, 相对75℃预警限留足裕量
         target = self.cfg.ambient_temp + current * 1.8
+        if self._in_fault_window("overtemp"):
+            # 注入温升: 平衡温度叠加16℃, 越过75℃预警限(热惯性缓慢爬升)
+            target += 16.0
         return clamp(prev + (target - prev) * 0.05 + random.gauss(0, 0.2),
                      self.cfg.ambient_temp - 2.0, 95.0)
 
@@ -277,13 +311,29 @@ def parse_args():
     p.add_argument("--save-fig", default=None,
                    help="结束后将曲线保存为PNG(不弹窗口)")
     p.add_argument("--report", action="store_true", help="结束导出统计报表")
+    p.add_argument("--fault", default=None,
+                   help="故障注入场景, 逗号分隔: volt_sag,overcurrent,overtemp"
+                        "(缺省不注入, 即纯正常工况)")
     return p.parse_args()
+
+
+def parse_faults(spec):
+    """解析--fault参数, 校验场景名"""
+    if not spec:
+        return ()
+    names = [s.strip() for s in spec.split(",") if s.strip()]
+    unknown = [s for s in names if s not in FAULT_SCENARIOS]
+    if unknown:
+        raise SystemExit(f"未知故障场景: {', '.join(unknown)}; "
+                         f"可选: {', '.join(FAULT_SCENARIOS)}")
+    return names
 
 
 def main():
     args = parse_args()
     cfg = SimConfig()
-    sim = PLCDataSimulator(cfg, args.samples)
+    faults = parse_faults(args.fault)
+    sim = PLCDataSimulator(cfg, args.samples, faults=faults)
     logger = HistoryLogger(args.output)
     samples = []
     clock = datetime.now()
