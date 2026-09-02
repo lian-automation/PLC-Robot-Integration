@@ -3,13 +3,16 @@ MODULE MainModule
 ! 项目: PLC-Robot-Integration-Demo  ABB机器人码垛程序
 ! 控制器: IRC5  机器人: IRB1200-7/0.9
 ! 内容: 坐标系标定流程 / 轨迹规划(垛型计算) / 速度参数 / 安全逻辑
-! 版本: V2.1  日期: 2026-08-24
+! 版本: V2.2  日期: 2026-09-02
 ! 变更: V2.0 标定流程/垛型计算/安全逻辑整理
 !       V2.1 改单件码垛握手: 每件DO2脉冲回报, 对应PLC逐件顺控;
 !            启动命令上升沿触发, 信号粘连只执行一件;
 !            新增diReset(DI2)垛位计数复位, 对接PLC满垛Q1.0;
 !            修复TimeFlag共用污染(真空超时一次即永久跳过码垛);
 !            删除非法IPers调用(PERS本身自动掉电保存)
+!       V2.2 修复非法CYCLE指令(RAPID指令集无CYCLE, 模块加载即报错):
+!            启动等待30s超时改用ExitCycle(紧凑IF形式), PP回main
+!            重跑rInit(回Home并重发doRobotReady), 不再死等
 ! 信号: diPLCStart=PLC启动命令(DI1, 600ms脉冲)
 !       diReset=PLC垛满复位命令(DI2, 换托盘时输出)
 !       diSafeStop=安全回路(DI3)
@@ -64,10 +67,10 @@ MODULE MainModule
                 TPWrite "收到复位命令, 垛位计数清零";
             ENDIF
             bRstOld:=diReset;
-            ! 等PLC启动命令, 30秒超时则回等待(避免死等)
+            ! 等PLC启动命令, 30秒超时则ExitCycle回main重新初始化(避免死等)
             bCmdTO:=FALSE;
             WaitDI diPLCStart,1\MaxTime:=30\TimeFlag:=bCmdTO;
-            IF bCmdTO CYCLE;
+            IF bCmdTO ExitCycle;
             ! 上升沿才执行: 命令粘连(Q0.7持续为1)也只码一件
             IF diPLCStart=1 AND NOT bCmdOld THEN
                 rPalletize;
