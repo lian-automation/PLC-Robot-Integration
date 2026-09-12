@@ -1,6 +1,6 @@
 # PLC-Robot-Integration
 
-[![CI](https://github.com/lwj15089590118/PLC-Robot-Integration/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/lwj15089590118/PLC-Robot-Integration/actions/workflows/ci.yml)
+[![CI](https://github.com/lian-automation/PLC-Robot-Integration/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/lian-automation/PLC-Robot-Integration/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 [![TIA Portal](https://img.shields.io/badge/TIA%20Portal-V16%2B-red.svg)](src/PLC_Logic.scl)
