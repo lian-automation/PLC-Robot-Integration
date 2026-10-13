@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="860" viewBox="0 0 1240 860">
+<rect width="1240" height="860" fill="white"/>
+<rect x="16" y="16" width="1208" height="828" rx="0" fill="none" stroke="#204e8c" stroke-width="3"/>
+<rect x="28" y="28" width="1184" height="804" rx="0" fill="none" stroke="#204e8c" stroke-width="1"/>
+<rect x="730" y="724" width="470" height="96" rx="0" fill="#eef3fa" stroke="#204e8c" stroke-width="2"/>
+<line x1="730" y1="756" x2="1200" y2="756" stroke="#204e8c" stroke-width="1"/>
+<line x1="730" y1="788" x2="1200" y2="788" stroke="#204e8c" stroke-width="1"/>
+<text x="742" y="746" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="15" fill="#204e8c" text-anchor="start" font-weight="bold">主回路接线图（星三角启动）</text>
+<text x="742" y="778" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="start" font-weight="normal">图号 E-XD-01</text>
+<text x="910" y="778" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="start" font-weight="normal">版本 A1</text>
+<text x="1030" y="778" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="start" font-weight="normal">2026-08-16</text>
+<text x="742" y="810" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="start" font-weight="normal">电机 M1  3~ 11kW  AC380V/50Hz</text>
+<text x="1030" y="810" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="start" font-weight="normal">制图：李安</text>
+<text x="150" y="74" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="14" fill="#1a1a1a" text-anchor="start" font-weight="bold">三相四线 AC380V/50Hz</text>
+<line x1="230" y1="96" x2="230" y2="650" stroke="#c62828" stroke-width="3"/>
+<text x="224" y="88" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="14" fill="#c62828" text-anchor="end" font-weight="bold">L1</text>
+<line x1="350" y1="96" x2="350" y2="650" stroke="#2e7d32" stroke-width="3"/>
+<text x="344" y="88" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="14" fill="#2e7d32" text-anchor="end" font-weight="bold">L2</text>
+<line x1="470" y1="96" x2="470" y2="650" stroke="#1565c0" stroke-width="3"/>
+<text x="464" y="88" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="14" fill="#1565c0" text-anchor="end" font-weight="bold">L3</text>
+<circle cx="230" cy="118" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="230" y="122" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#1a1a1a" text-anchor="middle" font-weight="bold">1</text>
+<circle cx="350" cy="118" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="350" y="122" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#1a1a1a" text-anchor="middle" font-weight="bold">3</text>
+<circle cx="470" cy="118" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="470" y="122" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#1a1a1a" text-anchor="middle" font-weight="bold">5</text>
+<text x="496" y="122" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#777" text-anchor="start" font-weight="normal">← 进线端子号</text>
+<rect x="164" y="158" width="132" height="62" rx="3" fill="#f5f7fa" stroke="#1a1a1a" stroke-width="2"/><text x="230.0" y="182" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="17" fill="#1a1a1a" text-anchor="middle" font-weight="bold">QF0</text><text x="230.0" y="200" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal">塑壳断路器</text><text x="230.0" y="215" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#666" text-anchor="middle" font-weight="normal">NB1-63/3P  32A</text>
+<line x1="230" y1="130" x2="230" y2="168" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="230" y1="210" x2="230" y2="210" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="130" x2="350" y2="168" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="210" x2="350" y2="210" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="130" x2="470" y2="168" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="210" x2="470" y2="210" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="230" y1="170" x2="230" y2="180" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="230" y1="180" x2="241" y2="199" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="230" y1="199" x2="230" y2="210" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="170" x2="350" y2="180" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="180" x2="361" y2="199" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="199" x2="350" y2="210" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="170" x2="470" y2="180" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="180" x2="481" y2="199" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="199" x2="470" y2="210" stroke="#1a1a1a" stroke-width="2"/>
+<circle cx="230" cy="232" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="230" y="236" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#1a1a1a" text-anchor="middle" font-weight="bold">2</text>
+<circle cx="350" cy="232" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="350" y="236" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#1a1a1a" text-anchor="middle" font-weight="bold">4</text>
+<circle cx="470" cy="232" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="470" y="236" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#1a1a1a" text-anchor="middle" font-weight="bold">6</text>
+<text x="496" y="236" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#777" text-anchor="start" font-weight="normal">← 出线端子号</text>
+<rect x="164" y="266" width="132" height="62" rx="3" fill="#f5f7fa" stroke="#1a1a1a" stroke-width="2"/><text x="230.0" y="290" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="17" fill="#1a1a1a" text-anchor="middle" font-weight="bold">KM1</text><text x="230.0" y="308" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal">主接触器</text><text x="230.0" y="323" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#666" text-anchor="middle" font-weight="normal">NC1-1810  线圈AC220V</text>
+<line x1="230" y1="244" x2="230" y2="278" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="230" y1="278" x2="230" y2="288" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="230" y1="288" x2="241" y2="307" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="230" y1="307" x2="230" y2="318" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="244" x2="350" y2="278" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="278" x2="350" y2="288" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="288" x2="361" y2="307" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="307" x2="350" y2="318" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="244" x2="470" y2="278" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="278" x2="470" y2="288" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="288" x2="481" y2="307" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="307" x2="470" y2="318" stroke="#1a1a1a" stroke-width="2"/>
+<text x="164" y="350" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#777" text-anchor="start" font-weight="normal">控制回路见 E-XD-02</text>
+<polyline points="223,296 223,280" stroke="#1a1a1a" stroke-width="1.6" fill="none"/>
+<polyline points="343,296 343,280" stroke="#1a1a1a" stroke-width="1.6" fill="none"/>
+<polyline points="463,296 463,280" stroke="#1a1a1a" stroke-width="1.6" fill="none"/>
+<rect x="210" y="362" width="280" height="56" rx="3" fill="#f5f7fa" stroke="#1a1a1a" stroke-width="2"/>
+<text x="350.0" y="384" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="13" fill="#1a1a1a" text-anchor="middle" font-weight="bold">FR1  热继电器  NR2-25</text>
+<text x="350.0" y="404" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#555" text-anchor="middle" font-weight="normal">整定电流 22A（三极主触点串入）</text>
+<line x1="230" y1="318" x2="230" y2="362" stroke="#1a1a1a" stroke-width="2"/>
+<rect x="218" y="374" width="24" height="22" rx="0" fill="#fff" stroke="#1a1a1a" stroke-width="1.6"/>
+<line x1="230" y1="418" x2="230" y2="436" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="350" y1="318" x2="350" y2="362" stroke="#1a1a1a" stroke-width="2"/>
+<rect x="338" y="374" width="24" height="22" rx="0" fill="#fff" stroke="#1a1a1a" stroke-width="1.6"/>
+<line x1="350" y1="418" x2="350" y2="436" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="470" y1="318" x2="470" y2="362" stroke="#1a1a1a" stroke-width="2"/>
+<rect x="458" y="374" width="24" height="22" rx="0" fill="#fff" stroke="#1a1a1a" stroke-width="1.6"/>
+<line x1="470" y1="418" x2="470" y2="436" stroke="#1a1a1a" stroke-width="2"/>
+<text x="238" y="432" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#a04000" text-anchor="start" font-weight="bold">U1</text>
+<text x="358" y="432" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#a04000" text-anchor="start" font-weight="bold">V1</text>
+<text x="478" y="432" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#a04000" text-anchor="start" font-weight="bold">W1</text>
+<circle cx="350.0" cy="506" r="42" fill="#fff" stroke="#1a1a1a" stroke-width="2.5"/>
+<text x="350.0" y="502" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="22" fill="#1a1a1a" text-anchor="middle" font-weight="bold">M1</text>
+<text x="350.0" y="520" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="13" fill="#555" text-anchor="middle" font-weight="normal">3~</text>
+<text x="152" y="460" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="13" fill="#1a1a1a" text-anchor="start" font-weight="bold">电机接线盒（6 端子）</text>
+<circle cx="230" cy="484" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="230" y="488" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="10" fill="#1a1a1a" text-anchor="middle" font-weight="bold">U1</text>
+<line x1="230" y1="484" x2="230" y2="506" stroke="#1a1a1a" stroke-width="1.6"/>
+<circle cx="350" cy="484" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="350" y="488" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="10" fill="#1a1a1a" text-anchor="middle" font-weight="bold">V1</text>
+<line x1="350" y1="484" x2="350" y2="506" stroke="#1a1a1a" stroke-width="1.6"/>
+<circle cx="470" cy="484" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="470" y="488" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="10" fill="#1a1a1a" text-anchor="middle" font-weight="bold">W1</text>
+<line x1="470" y1="484" x2="470" y2="506" stroke="#1a1a1a" stroke-width="1.6"/>
+<circle cx="230" cy="530" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="230" y="534" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="10" fill="#1a1a1a" text-anchor="middle" font-weight="bold">U2</text>
+<circle cx="350" cy="530" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="350" y="534" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="10" fill="#1a1a1a" text-anchor="middle" font-weight="bold">V2</text>
+<circle cx="470" cy="530" r="11" fill="white" stroke="#1a1a1a" stroke-width="2"/><text x="470" y="534" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="10" fill="#1a1a1a" text-anchor="middle" font-weight="bold">W2</text>
+<text x="496" y="488" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#777" text-anchor="start" font-weight="normal">上排：主回路进线</text>
+<text x="496" y="534" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#777" text-anchor="start" font-weight="normal">下排：星/三角换接</text>
+<text x="152" y="568" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="13" fill="#1565c0" text-anchor="start" font-weight="bold">星形支路（Y）</text>
+<rect x="152" y="574" width="180" height="54" rx="3" fill="#f5f7fa" stroke="#1a1a1a" stroke-width="2"/><text x="242.0" y="598" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="17" fill="#1a1a1a" text-anchor="middle" font-weight="bold">KM_Y</text><text x="242.0" y="616" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#444" text-anchor="middle" font-weight="normal">星点接触器</text><text x="242.0" y="631" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#666" text-anchor="middle" font-weight="normal">三极短接成星点</text>
+<line x1="230" y1="542" x2="230" y2="570" stroke="#1565c0" stroke-width="1.6"/>
+<line x1="350" y1="542" x2="350" y2="570" stroke="#1565c0" stroke-width="1.6"/>
+<line x1="470" y1="542" x2="470" y2="570" stroke="#1565c0" stroke-width="1.6"/>
+<line x1="250" y1="601" x2="450" y2="601" stroke="#1565c0" stroke-width="2"/>
+<text x="374" y="598" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#1565c0" text-anchor="start" font-weight="normal">N*（星点）</text>
+<text x="152" y="646" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="13" fill="#c62828" text-anchor="start" font-weight="bold">三角支路（D，跨接）</text>
+<rect x="152" y="652" width="166" height="46" rx="3" fill="#fdf1f1" stroke="#c62828" stroke-width="1.6"/>
+<text x="162" y="672" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12.5" fill="#c62828" text-anchor="start" font-weight="bold">KM_D极1</text>
+<text x="162" y="690" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">U2 → V1   线号 3U</text>
+<rect x="338" y="652" width="166" height="46" rx="3" fill="#fdf1f1" stroke="#c62828" stroke-width="1.6"/>
+<text x="348" y="672" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12.5" fill="#c62828" text-anchor="start" font-weight="bold">KM_D极2</text>
+<text x="348" y="690" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">V2 → W1   线号 3V</text>
+<rect x="524" y="652" width="166" height="46" rx="3" fill="#fdf1f1" stroke="#c62828" stroke-width="1.6"/>
+<text x="534" y="672" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12.5" fill="#c62828" text-anchor="start" font-weight="bold">KM_D极3</text>
+<text x="534" y="690" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">W2 → U1   线号 3W</text>
+<rect x="640" y="100" width="552" height="30" rx="0" fill="#eef3fa" stroke="#204e8c" stroke-width="1.6"/>
+<text x="916.0" y="121" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="13" fill="#204e8c" text-anchor="middle" font-weight="bold">元件明细表</text>
+<rect x="640" y="130" width="552" height="26" rx="0" fill="#f5f7fa" stroke="#204e8c" stroke-width="1.2"/>
+<text x="652" y="148" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#204e8c" text-anchor="start" font-weight="bold">位号</text>
+<text x="732" y="148" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#204e8c" text-anchor="start" font-weight="bold">名称</text>
+<text x="890" y="148" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#204e8c" text-anchor="start" font-weight="bold">型号规格</text>
+<text x="1110" y="148" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#204e8c" text-anchor="start" font-weight="bold">数量</text>
+<rect x="640" y="156" width="552" height="27" rx="0" fill="#ffffff" stroke="#c7ced6" stroke-width="0.8"/>
+<text x="652" y="175" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold">QF0</text>
+<text x="732" y="175" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="normal">塑壳断路器</text>
+<text x="890" y="175" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">NB1-63/3P  32A</text>
+<text x="1110" y="175" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">1</text>
+<rect x="640" y="183" width="552" height="27" rx="0" fill="#fafbfc" stroke="#c7ced6" stroke-width="0.8"/>
+<text x="652" y="202" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold">KM1</text>
+<text x="732" y="202" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="normal">主接触器</text>
+<text x="890" y="202" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">NC1-1810  AC220V 线圈</text>
+<text x="1110" y="202" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">1</text>
+<rect x="640" y="210" width="552" height="27" rx="0" fill="#ffffff" stroke="#c7ced6" stroke-width="0.8"/>
+<text x="652" y="229" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold">KR1</text>
+<text x="732" y="229" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="normal">热继电器</text>
+<text x="890" y="229" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">NR2-25  整定 22A</text>
+<text x="1110" y="229" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">1</text>
+<rect x="640" y="237" width="552" height="27" rx="0" fill="#fafbfc" stroke="#c7ced6" stroke-width="0.8"/>
+<text x="652" y="256" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold">KM_Y</text>
+<text x="732" y="256" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="normal">星点接触器</text>
+<text x="890" y="256" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">三极短接成星点（Y）</text>
+<text x="1110" y="256" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">1</text>
+<rect x="640" y="264" width="552" height="27" rx="0" fill="#ffffff" stroke="#c7ced6" stroke-width="0.8"/>
+<text x="652" y="283" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold">KM_D</text>
+<text x="732" y="283" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="normal">三角接触器</text>
+<text x="890" y="283" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">三极跨接（D）</text>
+<text x="1110" y="283" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">1</text>
+<rect x="640" y="291" width="552" height="27" rx="0" fill="#fafbfc" stroke="#c7ced6" stroke-width="0.8"/>
+<text x="652" y="310" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold">M1</text>
+<text x="732" y="310" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="normal">三相异步电机</text>
+<text x="890" y="310" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">3~ 11kW  AC380V</text>
+<text x="1110" y="310" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">1</text>
+<rect x="640" y="318" width="552" height="27" rx="0" fill="#ffffff" stroke="#c7ced6" stroke-width="0.8"/>
+<text x="652" y="337" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold">PE</text>
+<text x="732" y="337" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="normal">保护接地</text>
+<text x="890" y="337" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">4mm² 黄绿线  ≤4Ω</text>
+<text x="1110" y="337" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">1</text>
+<rect x="640" y="345" width="552" height="27" rx="0" fill="#fafbfc" stroke="#c7ced6" stroke-width="0.8"/>
+<text x="652" y="364" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold">—</text>
+<text x="732" y="364" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="normal">主回路导线</text>
+<text x="890" y="364" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">4mm²（控制回路 1.0mm²）</text>
+<text x="1110" y="364" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">—</text>
+<text x="652" y="392" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11" fill="#777" text-anchor="start" font-weight="normal">注：KM_Y 与 KM_D 辅助常闭触点互串互锁</text>
+<line x1="530" y1="718" x2="630" y2="718" stroke="#7cb342" stroke-width="3"/>
+<text x="536" y="712" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#33691e" text-anchor="start" font-weight="normal">电机外壳 PE 端子 ── 4mm² 黄绿线 ── PE 铜排</text>
+<text x="536" y="738" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12" fill="#33691e" text-anchor="start" font-weight="normal">接地电阻 ≤ 4Ω</text>
+<line x1="730" y1="716" x2="730" y2="734" stroke="#7cb342" stroke-width="3"/>
+<line x1="719.0" y1="734" x2="741.0" y2="734" stroke="#7cb342" stroke-width="3"/>
+<line x1="723.0" y1="741" x2="737.0" y2="741" stroke="#7cb342" stroke-width="3"/>
+<line x1="727.0" y1="748" x2="733.0" y2="748" stroke="#7cb342" stroke-width="3"/>
+<line x1="48" y1="750" x2="1192" y2="750" stroke="#c7ced6" stroke-width="1"/>
+<text x="52" y="772" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">1. 互锁：KM_Y 与 KM_D 辅助常闭触点在控制回路互串（见 E-XD-02）</text>
+<text x="52" y="793" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">2. 线径：主回路 4mm² ／ PE 4mm² ／ 控制回路 1.0mm²</text>
+<text x="52" y="814" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">3. 接地：接地电阻 ≤ 4Ω；停电作业须验电、放电、挂接地线、挂牌上锁</text>
+<text x="52" y="835" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#555" text-anchor="start" font-weight="normal">4. 本图为按文本图拓扑渲染的 SVG 效果图；实际工程请以 EPLAN/CAD 出图替换</text>
+<text x="760" y="766" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="12.5" fill="#1a1a1a" text-anchor="start" font-weight="bold">相色图例</text>
+<line x1="760" y1="784" x2="790" y2="784" stroke="#c62828" stroke-width="3"/>
+<text x="800" y="788" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#c62828" text-anchor="start" font-weight="normal">L1 相</text>
+<line x1="760" y1="804" x2="790" y2="804" stroke="#2e7d32" stroke-width="3"/>
+<text x="800" y="808" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#2e7d32" text-anchor="start" font-weight="normal">L2 相</text>
+<line x1="760" y1="824" x2="790" y2="824" stroke="#1565c0" stroke-width="3"/>
+<text x="800" y="828" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#1565c0" text-anchor="start" font-weight="normal">L3 相</text>
+<line x1="864" y1="784" x2="894" y2="784" stroke="#7cb342" stroke-width="3"/>
+<text x="904" y="788" font-family="Microsoft YaHei, SimHei, sans-serif" font-size="11.5" fill="#33691e" text-anchor="start" font-weight="normal">PE 保护接地</text>
+</svg>

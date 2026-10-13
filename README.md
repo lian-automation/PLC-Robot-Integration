@@ -71,7 +71,7 @@ PLC-Robot-Integration/
 ├── src/                           # 主线: 码垛单元源程序
 │   ├── PLC_Logic.scl              # 伺服FB+顺控FB+故障FB (TIA外部源)
 │   ├── Robot_Program.mod          # RAPID: 标定/轨迹/安全逻辑
-│   └── HMI_Screenshots/画面说明.md # MCGS三画面草图(截图待补)
+│   └── HMI_Screenshots/             # MCGS 三画面（效果图 PNG + 画面说明.md）
 ├── docs/                          # 工程文档
 │   ├── 系统设计说明书.md           # 需求→架构→方案→调试→自验判据
 │   ├── 硬件选型手册.md             # PLC对比/伺服公式/传感器原则
@@ -95,13 +95,16 @@ PLC-Robot-Integration/
 └── star_delta_demo/               # 早期实训练习: 星三角启动柜(2026-06)
     ├── PLC/star_delta.scl
     ├── PLC/hmi_tag.csv
-    ├── 电气图纸/主回路接线图.txt     # 文本模拟图(占位.dwg)
+    ├── 电气图纸/
+│   ├── 主回路接线图.svg           # 星三角主回路原理图（图号 E-XD-01）
+│   └── 主回路接线图.txt           # 同上拓扑的纯文本版（含跨接表/线径/接地）
     ├── 电气图纸/I_O分配表.md        # 文本模拟表(占位.xlsx)
     ├── 操作说明书.md
     └── 现场调试记录.txt             # 实训台调试记录
 ```
 
-> 说明：`star_delta_demo` 下 `.dwg`/`.xlsx` 为纯文本模拟占位文件；接线图图号（E-XD-01/02）在 `docs/硬件接线图说明.md` 中以文字版给出。
+> 说明：`star_delta_demo` 下 `.dwg`/`.xlsx` 为纯文本模拟占位文件；接线图图号（E-XD-01/02）在 `docs/硬件接线图说明.md` 中以文字版给出，
+> `电气图纸/主回路接线图.svg` 是按该文本拓扑渲染的矢量原理图（由 `scripts/gen_wiring_diagram.py` 生成，非 EPLAN/CAD 出图）。
 
 ## 6. 快速开始
 
@@ -112,6 +115,23 @@ PLC-Robot-Integration/
    `docs/` 下的曲线图、CSV、报表就是这条命令（故障注入场景）的运行产物；不带 `--fault` 运行即纯正常工况（报表故障/预警为 0）。
 4. **测试用例**：对照 `docs/仿真测试用例.md` 在 PLCSIM 中逐条注入验证；表1/表2 期望值可先用
    `python scripts/真值表复算.py` 自动复核（与 `src/PLC_Logic.scl` 逻辑逐行对照，不一致时非零退出）。
+5. **一键验证（推荐）**：`python -m pytest tests -q`（真值表复算 + 覆盖率断言），或单独补画 MCGS 画面效果图
+   `python scripts/gen_hmi_screens.py`。
+
+## 6.5 MCGS 人机界面（三画面）
+
+| 主界面（索引 0） | 手动调试（索引 1，权限≥2） | 报警中心（索引 2） |
+|---|---|---|
+| ![主界面](src/HMI_Screenshots/画面1_主界面.png) | ![手动调试](src/HMI_Screenshots/画面2_手动调试.png) | ![报警中心](src/HMI_Screenshots/画面3_报警中心.png) |
+
+*上图为按 MCGS 组态风格绘制的 800×480 画面效果图（TPC7062Ti 分辨率），由
+[`scripts/gen_hmi_screens.py`](scripts/gen_hmi_screens.py) 生成，布局与元件设计见
+[`src/HMI_Screenshots/画面说明.md`](src/HMI_Screenshots/画面说明.md)；非真机 MCGS 工程导出截图。*
+
+**画面设计要点**（组态思路，面试可讲）：
+- **按钮用瞬动型**：启动/停止写 M 位，由 PLC 逻辑确认执行——防止触摸屏死机时误发命令；
+- **手动画面加权限**：进入需密码（等级≥2）并强制 PLC 切手动，且**本屏不控制机器人**（安全边界）；
+- **报警分级**：严重/一般/提示三级，严重级需现场确认后才可复位，避免"一键复位"掩盖故障。
 
 ## 7. 常见问题（面试官/HR 可能会问）
 
