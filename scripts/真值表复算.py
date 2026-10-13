@@ -163,7 +163,7 @@ def main():
     print(f"复算范围: 表1 {len(t1_rows)} 行(FB_ServoCtrl, 链式) + "
           f"表2 {len(t2_rows)} 行(FB_FaultHandler, 顺序注入) = {total} 行")
     print(f"对照文档: {DOC_PATH.name}")
-    print(f"对照代码: src/PLC_Logic.scl (FB_ServoCtrl / FB_FaultHandler)")
+    print("对照代码: src/PLC_Logic.scl (FB_ServoCtrl / FB_FaultHandler)")
     if failures:
         print(f"\n[不一致] 共 {len(failures)} 处:")
         for item in failures:

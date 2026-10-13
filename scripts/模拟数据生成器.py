@@ -13,7 +13,6 @@ import argparse
 import csv
 import os
 import random
-import time
 from datetime import datetime, timedelta
 
 # ---------- 模拟参数(按现场整定) ----------
