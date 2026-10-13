@@ -21,6 +21,14 @@ import re
 import sys
 from pathlib import Path
 
+# Windows 控制台中文防乱码：本脚本既可命令行直接运行，也会被 tests/ 以
+# subprocess 捕获输出做断言；GBK 控制台下中文会变成替换字符（\ufffd），
+# 既影响阅读也让下游断言失配——统一转 UTF-8。
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 DOC_PATH = Path(__file__).resolve().parent.parent / "docs" / "仿真测试用例.md"
 
 # 表1期望列在文档表中的列位置(0起): 9个输入列之后的 qEnable/qFwd/qRev/qAlarm

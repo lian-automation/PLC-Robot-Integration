@@ -29,6 +29,11 @@ jobs:
       - name: Truth table recheck (35 cases vs SCL logic)
         run: python scripts/真值表复算.py
 
+      - name: Unified test entry (pytest tests)
+        run: |
+          pip install pytest
+          python -m pytest tests -q
+
       - name: Lint (ruff, baseline E4/E7/E9/F)
 
 
